@@ -4,10 +4,12 @@ import Main from './Main';
 import Loader from './Loader';
 import Error from './Error';
 import StartScreen from './StartScreen';
+import Questions from './Questions';
 
 const iniState = {
   questions: [],
   status: 'loading', // loading, error, ready, active, finished
+  index: 0,
 };
 
 function quizReducer(state, action) {
@@ -16,13 +18,15 @@ function quizReducer(state, action) {
       return { ...state, questions: action.payload, status: 'ready' };
     case 'dataFailed':
       return { ...state, status: 'error' };
+    case 'start':
+      return { ...state, status: 'active' };
     default:
       throw new Error('invalid action type');
   }
 }
 
 export default function App() {
-  const [{ questions, status }, dispatch] = useReducer(quizReducer, iniState);
+  const [{ questions, status, index }, dispatch] = useReducer(quizReducer, iniState);
 
   const numQuestions = questions.length;
 
@@ -40,7 +44,10 @@ export default function App() {
       <Main className='main'>
         {status === 'loading' && <Loader />}
         {status === 'error' && <Error />}
-        {status === 'ready' && <StartScreen numQuestions={numQuestions} />}
+        {status === 'ready' && (
+          <StartScreen numQuestions={numQuestions} dispatch={dispatch} />
+        )}
+        {status === 'active' && <Questions question={questions[index]} />}
       </Main>
     </div>
   );
