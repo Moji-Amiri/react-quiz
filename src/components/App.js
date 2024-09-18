@@ -7,6 +7,7 @@ import StartScreen from './StartScreen';
 import Questions from './Questions';
 import NextButton from './NextButton';
 import Progress from './Progress';
+import FinishScreen from './FinishScreen';
 
 const iniState = {
   questions: [],
@@ -14,6 +15,7 @@ const iniState = {
   index: 0,
   answer: null,
   points: 0,
+  highScore: 0,
 };
 
 function quizReducer(state, action) {
@@ -36,6 +38,11 @@ function quizReducer(state, action) {
       };
     case 'nextQuestion':
       return { ...state, index: state.index + 1, answer: null };
+    case 'finish':
+      const highScore = state.points > state.highScore ? state.points : state.highScore;
+      return { ...state, status: 'finished', highScore };
+    case 'restart':
+      return { ...iniState, questions: state.questions, status: 'active' };
     default:
       throw new Error('invalid action type');
   }
@@ -44,7 +51,7 @@ function quizReducer(state, action) {
 export default function App() {
   const [state, dispatch] = useReducer(quizReducer, iniState);
 
-  const { questions, status, index, answer, points } = state;
+  const { questions, status, index, answer, points, highScore } = state;
   const numQuestions = questions.length;
   const maxPoints = questions.reduce((acc, question) => acc + question.points, 0);
 
@@ -75,8 +82,21 @@ export default function App() {
               answer={answer}
             />
             <Questions question={questions[index]} dispatch={dispatch} answer={answer} />
-            <NextButton dispatch={dispatch} answer={answer} />
+            <NextButton
+              dispatch={dispatch}
+              answer={answer}
+              index={index}
+              numQuestions={numQuestions}
+            />
           </>
+        )}
+        {status === 'finished' && (
+          <FinishScreen
+            points={points}
+            maxPoints={maxPoints}
+            highScore={highScore}
+            dispatch={dispatch}
+          />
         )}
       </Main>
     </div>
