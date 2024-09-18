@@ -8,6 +8,10 @@ import Questions from './Questions';
 import NextButton from './NextButton';
 import Progress from './Progress';
 import FinishScreen from './FinishScreen';
+import Timer from './Timer';
+import Footer from './Footer';
+
+const SECS_PER_QUESTIONS = 15;
 
 const iniState = {
   questions: [],
@@ -16,6 +20,7 @@ const iniState = {
   answer: null,
   points: 0,
   highScore: 0,
+  secsRemaining: null,
 };
 
 function quizReducer(state, action) {
@@ -25,7 +30,11 @@ function quizReducer(state, action) {
     case 'dataFailed':
       return { ...state, status: 'error' };
     case 'start':
-      return { ...state, status: 'active' };
+      return {
+        ...state,
+        status: 'active',
+        secsRemaining: state.questions.length * SECS_PER_QUESTIONS,
+      };
     case 'newAnswer':
       const question = state.questions[state.index];
       return {
@@ -39,10 +48,26 @@ function quizReducer(state, action) {
     case 'nextQuestion':
       return { ...state, index: state.index + 1, answer: null };
     case 'finish':
-      const highScore = state.points > state.highScore ? state.points : state.highScore;
-      return { ...state, status: 'finished', highScore };
+      return {
+        ...state,
+        status: 'finished',
+        highScore: state.points > state.highScore ? state.points : state.highScore,
+      };
     case 'restart':
-      return { ...iniState, questions: state.questions, status: 'active' };
+      return {
+        ...iniState,
+        questions: state.questions,
+        status: 'active',
+        secsRemaining: state.questions.length * SECS_PER_QUESTIONS,
+        highScore: state.highScore,
+      };
+    case 'tick':
+      return {
+        ...state,
+        secsRemaining: state.secsRemaining - 1,
+        status: state.secsRemaining <= 0 ? 'finished' : state.status,
+        highScore: state.points > state.highScore ? state.points : state.highScore,
+      };
     default:
       throw new Error('invalid action type');
   }
@@ -51,7 +76,7 @@ function quizReducer(state, action) {
 export default function App() {
   const [state, dispatch] = useReducer(quizReducer, iniState);
 
-  const { questions, status, index, answer, points, highScore } = state;
+  const { questions, status, index, answer, points, highScore, secsRemaining } = state;
   const numQuestions = questions.length;
   const maxPoints = questions.reduce((acc, question) => acc + question.points, 0);
 
@@ -82,12 +107,15 @@ export default function App() {
               answer={answer}
             />
             <Questions question={questions[index]} dispatch={dispatch} answer={answer} />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={numQuestions}
-            />
+            <Footer>
+              <Timer secsRemaining={secsRemaining} dispatch={dispatch} />
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={numQuestions}
+              />
+            </Footer>
           </>
         )}
         {status === 'finished' && (
