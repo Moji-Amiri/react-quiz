@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useReducer } from 'react';
 import Header from './Header';
 import Main from './Main';
 import Loader from './Loader';
@@ -10,12 +10,11 @@ import Progress from './Progress';
 import FinishScreen from './FinishScreen';
 import Timer from './Timer';
 import Footer from './Footer';
-
-const SECS_PER_QUESTIONS = 15;
+import { SECS_PER_QUESTIONS, QUESTIONS } from './config';
 
 const iniState = {
-  questions: [],
-  status: 'loading', // loading, error, ready, active, finished
+  questions: QUESTIONS,
+  status: 'ready', // loading, error, ready, active, finished
   index: 0,
   answer: null,
   points: 0,
@@ -80,12 +79,12 @@ export default function App() {
   const numQuestions = questions.length;
   const maxPoints = questions.reduce((acc, question) => acc + question.points, 0);
 
-  useEffect(() => {
-    fetch('http://localhost:8000/questions')
-      .then(res => res.json())
-      .then(data => dispatch({ type: 'dataReceived', payload: data }))
-      .catch(err => dispatch({ type: 'dataFailed', payload: err }));
-  }, []);
+  // useEffect(() => {
+  //   fetch('http://localhost:8000/questions')
+  //     .then(res => res.json())
+  //     .then(data => dispatch({ type: 'dataReceived', payload: data }))
+  //     .catch(err => dispatch({ type: 'dataFailed', payload: err }));
+  // }, []);
 
   return (
     <div className='app'>
